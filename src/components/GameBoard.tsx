@@ -1,4 +1,4 @@
-import { Box, Grid, Button, Text, VStack, useToast } from '@chakra-ui/react';
+import { Grid, Button, Text, VStack, useToast } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';

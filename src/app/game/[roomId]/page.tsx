@@ -2,17 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Box, Container, Grid, Heading, Text } from '@chakra-ui/react';
+import { Container, Grid, Heading, Text } from '@chakra-ui/react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GameBoard from '@/components/GameBoard';
 import PlayerInfo from '@/components/PlayerInfo';
 
+interface GameData {
+  players: string[];
+  board: string[];
+  turn: string;
+  status: 'waiting' | 'playing' | 'won' | 'tie';
+  winner: string | null;
+}
+
 export default function GameRoom() {
   const params = useParams();
   const roomId = params.roomId as string;
   const [playerId, setPlayerId] = useState<string>('');
-  const [gameData, setGameData] = useState<any>(null);
+  const [gameData, setGameData] = useState<GameData | null>(null);
 
   useEffect(() => {
     const initializeGame = async () => {
@@ -21,7 +29,7 @@ export default function GameRoom() {
 
       if (!gameDoc.exists()) {
         // Create new game
-        const newGameData = {
+        const newGameData: GameData = {
           players: ['player1'],
           board: Array(9).fill(''),
           turn: 'player1',
@@ -32,10 +40,10 @@ export default function GameRoom() {
         setPlayerId('player1');
         setGameData(newGameData);
       } else {
-        const data = gameDoc.data();
+        const data = gameDoc.data() as GameData;
         if (data.players.length < 2) {
           // Join existing game
-          const updatedData = {
+          const updatedData: GameData = {
             ...data,
             players: [...data.players, 'player2'],
             status: 'playing',
