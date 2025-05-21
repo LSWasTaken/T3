@@ -91,23 +91,23 @@ export default function GameBoard({ roomId, playerId, playerName }: GameBoardPro
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      <div className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="text-2xl font-bold text-gray-900 dark:text-white">
         {getStatusMessage()}
       </div>
-      <div className="grid grid-cols-3 gap-2 bg-gray-200 dark:bg-gray-700 p-2 rounded-lg">
+      <div className="grid grid-cols-3 gap-3 bg-gray-200 dark:bg-gray-700 p-3 rounded-xl">
         {board.map((cell, index) => (
           <button
             key={index}
             onClick={() => handleCellClick(index)}
             disabled={gameStatus !== 'playing' || currentTurn !== playerId || cell !== ''}
             className={`
-              w-20 h-20 flex items-center justify-center text-4xl font-bold
-              bg-white dark:bg-gray-800 rounded-lg
+              w-24 h-24 flex items-center justify-center text-5xl font-bold
+              bg-white dark:bg-gray-800 rounded-lg shadow-md
               ${cell === 'X' ? 'text-blue-500' : cell === 'O' ? 'text-red-500' : 'text-gray-400'}
               ${gameStatus === 'playing' && currentTurn === playerId && cell === '' 
-                ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer' 
+                ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transform hover:scale-[1.02] active:scale-[0.98]' 
                 : 'cursor-not-allowed'}
-              transition-colors
+              transition-all duration-200
             `}
           >
             {cell}

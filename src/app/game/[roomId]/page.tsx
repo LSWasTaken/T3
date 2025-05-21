@@ -6,6 +6,7 @@ import { doc, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GameBoard from '@/components/GameBoard';
 import PlayerInfo from '@/components/PlayerInfo';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface GameData {
   board: string[];
@@ -30,6 +31,7 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
     players: {}
   });
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (!username) {
@@ -84,13 +86,27 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
   // Clean up game room after game ends
   useEffect(() => {
     if (gameData.gameStatus === 'won' || gameData.gameStatus === 'tie') {
-      const timer = setTimeout(async () => {
+      setCountdown(10);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(timer);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      const cleanupTimer = setTimeout(async () => {
         const gameRef = doc(db, 'games', params.roomId);
         await deleteDoc(gameRef);
         router.push('/');
-      }, 10000); // 10 seconds delay
+      }, 10000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearInterval(timer);
+        clearTimeout(cleanupTimer);
+      };
     }
   }, [gameData.gameStatus, params.roomId, router]);
 
@@ -106,9 +122,10 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <ThemeToggle />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-8 gap-4">
             <PlayerInfo
               name={gameData.players.player1 || 'Player 1'}
               symbol="X"
@@ -121,24 +138,26 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
             />
           </div>
 
-          <GameBoard
-            roomId={params.roomId}
-            playerId={playerId}
-            playerName={username || ''}
-          />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+            <GameBoard
+              roomId={params.roomId}
+              playerId={playerId}
+              playerName={username || ''}
+            />
 
-          {(gameData.gameStatus === 'won' || gameData.gameStatus === 'tie') && (
-            <div className="mt-8 text-center">
-              <div className="text-xl text-gray-900 dark:text-white mb-4">
-                {gameData.gameStatus === 'won'
-                  ? `Winner: ${gameData.winner === playerId ? 'You' : 'Opponent'}!`
-                  : "It's a tie!"}
+            {(gameData.gameStatus === 'won' || gameData.gameStatus === 'tie') && (
+              <div className="mt-8 text-center">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  {gameData.gameStatus === 'won'
+                    ? `Winner: ${gameData.winner === playerId ? 'You' : 'Opponent'}!`
+                    : "It's a tie!"}
+                </div>
+                <div className="text-lg text-gray-600 dark:text-gray-400">
+                  Redirecting to home page in {countdown} seconds...
+                </div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Redirecting to home page in 10 seconds...
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
