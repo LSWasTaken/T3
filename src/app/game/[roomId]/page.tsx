@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { doc, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GameBoard from '@/components/GameBoard';
 import PlayerInfo from '@/components/PlayerInfo';
@@ -50,7 +50,7 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
           winner: null,
           players: { player1: username }
         };
-        await updateDoc(gameRef, newGameData);
+        await setDoc(gameRef, newGameData);
         setGameData(newGameData);
         setPlayerId('player1');
         return;
