@@ -2,85 +2,89 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Button,
-  Container,
-  FormControl,
-  FormLabel,
-  Heading,
-  Input,
-  VStack,
-  Text,
-  useToast,
-} from '@chakra-ui/react';
 import { nanoid } from 'nanoid';
+import UsernameInput from '@/components/UsernameInput';
 
 export default function Home() {
   const router = useRouter();
-  const toast = useToast();
   const [roomCode, setRoomCode] = useState('');
+  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'create' | 'join' | null>(null);
 
-  const createNewGame = () => {
-    const newRoomId = nanoid(6);
-    router.push(`/game/${newRoomId}`);
+  const handleCreateGame = () => {
+    setPendingAction('create');
+    setIsUsernameModalOpen(true);
   };
 
-  const joinGame = () => {
+  const handleJoinGame = () => {
     if (!roomCode) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a room code',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      alert('Please enter a room code');
       return;
     }
-    router.push(`/game/${roomCode}`);
+    setPendingAction('join');
+    setIsUsernameModalOpen(true);
+  };
+
+  const handleUsernameSubmit = (username: string) => {
+    if (pendingAction === 'create') {
+      const newRoomId = nanoid(6);
+      router.push(`/game/${newRoomId}?username=${encodeURIComponent(username)}`);
+    } else if (pendingAction === 'join') {
+      router.push(`/game/${roomCode}?username=${encodeURIComponent(username)}`);
+    }
   };
 
   return (
-    <Container maxW="container.sm" py={20}>
-      <VStack spacing={8}>
-        <Heading>Tic Tac Toe</Heading>
-        <Text fontSize="xl" textAlign="center">
-          Play Tic Tac Toe with your friends in real-time!
-        </Text>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-20">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-8">
+            Tic Tac Toe
+          </h1>
+          <p className="text-xl text-center text-gray-600 dark:text-gray-300 mb-8">
+            Play Tic Tac Toe with your friends in real-time!
+          </p>
 
-        <Box w="100%" p={8} borderWidth={1} borderRadius="lg">
-          <VStack spacing={6}>
-            <Button
-              colorScheme="blue"
-              size="lg"
-              w="100%"
-              onClick={createNewGame}
-            >
-              Create New Game
-            </Button>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+            <div className="space-y-6">
+              <button
+                onClick={handleCreateGame}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                Create New Game
+              </button>
 
-            <Text>or</Text>
+              <div className="text-center text-gray-500 dark:text-gray-400">or</div>
 
-            <FormControl>
-              <FormLabel>Join Existing Game</FormLabel>
-              <Input
-                placeholder="Enter room code"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-              />
-            </FormControl>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Join Existing Game
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter room code"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
 
-            <Button
-              colorScheme="green"
-              size="lg"
-              w="100%"
-              onClick={joinGame}
-            >
-              Join Game
-            </Button>
-          </VStack>
-        </Box>
-      </VStack>
-    </Container>
+              <button
+                onClick={handleJoinGame}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                Join Game
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <UsernameInput
+        isOpen={isUsernameModalOpen}
+        onClose={() => setIsUsernameModalOpen(false)}
+        onSubmit={handleUsernameSubmit}
+      />
+    </div>
   );
 }

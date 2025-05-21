@@ -1,162 +1,119 @@
-import { Grid, Button, Text, VStack, useToast } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@/lib/firebase';
 
 interface GameBoardProps {
   roomId: string;
   playerId: string;
+  playerName: string;
 }
 
-const GameBoard = ({ roomId, playerId }: GameBoardProps) => {
+export default function GameBoard({ roomId, playerId, playerName }: GameBoardProps) {
   const [board, setBoard] = useState<string[]>(Array(9).fill(''));
-  const [currentTurn, setCurrentTurn] = useState<string>('');
-  const [gameStatus, setGameStatus] = useState<string>('waiting');
+  const [currentTurn, setCurrentTurn] = useState<string>('player1');
   const [winner, setWinner] = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-  const toast = useToast();
+  const [gameStatus, setGameStatus] = useState<'waiting' | 'playing' | 'won' | 'tie'>('waiting');
 
   useEffect(() => {
-    const gameRef = doc(db, 'rooms', roomId);
-    
-    const unsubscribe = onSnapshot(
-      gameRef,
-      (doc) => {
-        if (doc.exists()) {
-          const data = doc.data();
-          setBoard(data.board);
-          setCurrentTurn(data.turn);
-          setGameStatus(data.status);
-          setWinner(data.winner);
-          setIsOffline(false);
-        }
-      },
-      (error) => {
-        console.error('Error fetching game data:', error);
-        setIsOffline(true);
-        toast({
-          title: 'Connection Error',
-          description: 'Unable to connect to the game server. Please check your internet connection.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+    const gameRef = doc(db, 'games', roomId);
+    const unsubscribe = onSnapshot(gameRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setBoard(data.board || Array(9).fill(''));
+        setCurrentTurn(data.currentTurn || 'player1');
+        setWinner(data.winner || null);
+        setGameStatus(data.gameStatus || 'waiting');
       }
-    );
+    });
 
     return () => unsubscribe();
-  }, [roomId, toast]);
+  }, [roomId]);
 
   const handleCellClick = async (index: number) => {
-    if (board[index] !== '' || currentTurn !== playerId || gameStatus !== 'playing' || isOffline) {
+    if (
+      gameStatus !== 'playing' ||
+      currentTurn !== playerId ||
+      board[index] !== '' ||
+      winner
+    ) {
       return;
     }
 
-    try {
-      const gameRef = doc(db, 'rooms', roomId);
-      const newBoard = [...board];
-      newBoard[index] = currentTurn === playerId ? 'X' : 'O';
+    const newBoard = [...board];
+    newBoard[index] = playerId === 'player1' ? 'X' : 'O';
+    setBoard(newBoard);
 
-      const winner = checkWinner(newBoard);
-      const isTie = !winner && newBoard.every(cell => cell !== '');
+    const gameRef = doc(db, 'games', roomId);
+    await updateDoc(gameRef, {
+      board: newBoard,
+      currentTurn: currentTurn === 'player1' ? 'player2' : 'player1',
+    });
 
-      await updateDoc(gameRef, {
-        board: newBoard,
-        turn: currentTurn === playerId ? 'player2' : 'player1',
-        status: winner ? 'won' : isTie ? 'tie' : 'playing',
-        winner: winner || null,
-      });
-    } catch (error) {
-      console.error('Error updating game:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update the game. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const checkWinner = (board: string[]): string | null => {
-    const lines = [
+    // Check for winner
+    const winningCombos = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
       [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
       [0, 4, 8], [2, 4, 6] // diagonals
     ];
 
-    for (const [a, b, c] of lines) {
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
+    for (const combo of winningCombos) {
+      const [a, b, c] = combo;
+      if (
+        newBoard[a] &&
+        newBoard[a] === newBoard[b] &&
+        newBoard[a] === newBoard[c]
+      ) {
+        setWinner(playerId);
+        await updateDoc(gameRef, {
+          winner: playerId,
+          gameStatus: 'won'
+        });
+        return;
       }
     }
-    return null;
-  };
 
-  const handleRematch = async () => {
-    if (isOffline) return;
-
-    try {
-      const gameRef = doc(db, 'rooms', roomId);
+    // Check for tie
+    if (!newBoard.includes('')) {
       await updateDoc(gameRef, {
-        board: Array(9).fill(''),
-        turn: 'player1',
-        status: 'playing',
-        winner: null,
-      });
-    } catch (error) {
-      console.error('Error starting rematch:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to start rematch. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+        gameStatus: 'tie'
       });
     }
+  };
+
+  const getStatusMessage = () => {
+    if (gameStatus === 'waiting') return 'Waiting for opponent...';
+    if (winner) return `Winner: ${winner === playerId ? 'You' : 'Opponent'}!`;
+    if (gameStatus === 'tie') return "It's a tie!";
+    return `Current turn: ${currentTurn === playerId ? 'Your' : 'Opponent\'s'}`;
   };
 
   return (
-    <VStack spacing={4}>
-      {isOffline && (
-        <Text color="red.500" fontWeight="bold">
-          You are offline. Please check your internet connection.
-        </Text>
-      )}
-      
-      <Text fontSize="2xl" fontWeight="bold">
-        {gameStatus === 'waiting' && 'Waiting for opponent...'}
-        {gameStatus === 'playing' && `Current Turn: ${currentTurn === playerId ? 'Your Turn' : 'Opponent\'s Turn'}`}
-        {gameStatus === 'won' && `Winner: ${winner === 'X' ? 'Player 1' : 'Player 2'}`}
-        {gameStatus === 'tie' && 'Game Tied!'}
-      </Text>
-
-      <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+    <div className="flex flex-col items-center space-y-6">
+      <div className="text-xl font-semibold text-gray-900 dark:text-white">
+        {getStatusMessage()}
+      </div>
+      <div className="grid grid-cols-3 gap-2 bg-gray-200 dark:bg-gray-700 p-2 rounded-lg">
         {board.map((cell, index) => (
-          <Button
+          <button
             key={index}
-            w="100px"
-            h="100px"
-            fontSize="4xl"
             onClick={() => handleCellClick(index)}
-            isDisabled={gameStatus !== 'playing' || currentTurn !== playerId || isOffline}
+            disabled={gameStatus !== 'playing' || currentTurn !== playerId || cell !== ''}
+            className={`
+              w-20 h-20 flex items-center justify-center text-4xl font-bold
+              bg-white dark:bg-gray-800 rounded-lg
+              ${cell === 'X' ? 'text-blue-500' : cell === 'O' ? 'text-red-500' : 'text-gray-400'}
+              ${gameStatus === 'playing' && currentTurn === playerId && cell === '' 
+                ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer' 
+                : 'cursor-not-allowed'}
+              transition-colors
+            `}
           >
             {cell}
-          </Button>
+          </button>
         ))}
-      </Grid>
-
-      {(gameStatus === 'won' || gameStatus === 'tie') && (
-        <Button 
-          colorScheme="blue" 
-          onClick={handleRematch}
-          isDisabled={isOffline}
-        >
-          Rematch
-        </Button>
-      )}
-    </VStack>
+      </div>
+    </div>
   );
-};
-
-export default GameBoard; 
+} 

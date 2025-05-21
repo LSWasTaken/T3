@@ -1,30 +1,29 @@
-import { Text, VStack, Avatar } from '@chakra-ui/react';
+'use client';
 
 interface PlayerInfoProps {
-  playerId: string;
-  isCurrentTurn: boolean;
+  name: string;
   symbol: 'X' | 'O';
+  isCurrentTurn: boolean;
 }
 
-const PlayerInfo = ({ playerId, isCurrentTurn, symbol }: PlayerInfoProps) => {
+export default function PlayerInfo({ name, symbol, isCurrentTurn }: PlayerInfoProps) {
   return (
-    <VStack spacing={2}>
-      <Avatar
-        size="lg"
-        name={playerId}
-        bg={isCurrentTurn ? 'blue.500' : 'gray.200'}
-      />
-      <Text fontWeight="bold">{playerId}</Text>
-      <Text fontSize="2xl" color={symbol === 'X' ? 'blue.500' : 'red.500'}>
+    <div className={`
+      flex flex-col items-center p-4 rounded-lg
+      ${isCurrentTurn ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}
+      transition-colors
+    `}>
+      <div className="text-2xl font-bold mb-2">
         {symbol}
-      </Text>
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-300">
+        {name}
+      </div>
       {isCurrentTurn && (
-        <Text color="green.500" fontWeight="bold">
-          Your Turn
-        </Text>
+        <div className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+          Your turn
+        </div>
       )}
-    </VStack>
+    </div>
   );
-};
-
-export default PlayerInfo; 
+} 
