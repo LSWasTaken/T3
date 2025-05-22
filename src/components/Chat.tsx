@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from "react";
-import { useChannel } from "ably/react";
+'use client';
 
-interface ChatMessage {
+import { useState, useRef, useEffect } from "react";
+import { Message, MessageEvent } from '@ably/chat';
+import { useMessages, useChatClient } from '@ably/chat/react';
+import { ChatRoomProvider } from '@ably/chat/react';
+
+interface ChatMessage extends Message {
   sender: string;
-  message: string;
-  timestamp: number;
 }
 
 function getInitials(name: string) {
@@ -15,28 +17,31 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-export function Chat({ roomId, playerName }: { roomId: string; playerName: string }) {
+function ChatMessages({ roomId, playerName }: { roomId: string; playerName: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatClient = useChatClient();
 
-  const { channel } = useChannel(`chat-${roomId}`, (message) => {
-    setMessages((prev) => [...prev, message.data as ChatMessage]);
+  const { send } = useMessages({
+    listener: (event: MessageEvent) => {
+      console.log('received message', event.message);
+      setMessages(prev => [...prev, { ...event.message, sender: event.message.clientId || 'Anonymous' } as ChatMessage]);
+    }
   });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
+  const handleSend = async () => {
     if (!newMessage.trim()) return;
-    const message: ChatMessage = {
-      sender: playerName,
-      message: newMessage,
-      timestamp: Date.now(),
-    };
-    channel.publish("chat-message", message);
-    setNewMessage("");
+    try {
+      await send({ text: newMessage });
+      setNewMessage("");
+    } catch (error) {
+      console.error('error sending message', error);
+    }
   };
 
   return (
@@ -65,7 +70,7 @@ export function Chat({ roomId, playerName }: { roomId: string; playerName: strin
                 <div className="font-semibold mb-1 opacity-80 text-xs">
                   {msg.sender}
                 </div>
-                <div>{msg.message}</div>
+                <div>{msg.text}</div>
               </div>
               {isMe && (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shadow border-2 border-white/40 dark:border-gray-900/40">
@@ -81,7 +86,7 @@ export function Chat({ roomId, playerName }: { roomId: string; playerName: strin
         className="flex gap-2 mt-auto"
         onSubmit={e => {
           e.preventDefault();
-          sendMessage();
+          handleSend();
         }}
       >
         <input
@@ -98,5 +103,13 @@ export function Chat({ roomId, playerName }: { roomId: string; playerName: strin
         </button>
       </form>
     </div>
+  );
+}
+
+export function Chat({ roomId, playerName }: { roomId: string; playerName: string }) {
+  return (
+    <ChatRoomProvider id={`chat-${roomId}`}>
+      <ChatMessages roomId={roomId} playerName={playerName} />
+    </ChatRoomProvider>
   );
 } 

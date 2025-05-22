@@ -36,15 +36,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <ThemeToggle />
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-md mx-auto">
           <h1 className="text-5xl font-bold text-center text-gray-900 dark:text-white mb-4">
             Tic Tac Toe
           </h1>
           <p className="text-xl text-center text-gray-600 dark:text-gray-300 mb-12">
-            Play Tic Tac Toe with your friends in real-time!
+            Play Tic Tac Toe with your favorite YNS
           </p>
 
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
@@ -89,6 +88,18 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="fixed bottom-4 left-0 right-0 text-center flex items-center justify-center gap-4">
+        <a 
+          href="https://www.instagram.com/lsf4k.cs/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-block text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+        >
+          @lsf4k.cs
+        </a>
+        <ThemeToggle />
       </div>
 
       <UsernameInput

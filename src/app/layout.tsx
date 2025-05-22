@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AblyProvider } from "@/components/AblyProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Tic Tac Toe",
-  description: "Play Tic Tac Toe with your friends in real-time!",
+  description: "Play Tic Tac Toe with your friends",
 };
 
 export default function RootLayout({
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <AblyProvider>
+          {children}
+        </AblyProvider>
       </body>
     </html>
   );

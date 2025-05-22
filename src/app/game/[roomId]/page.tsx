@@ -122,9 +122,14 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <ThemeToggle />
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-4 text-center">
+          <div className="inline-block bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Room Code</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{params.roomId}</p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
           <div>
             <div className="mb-8">
@@ -168,6 +173,18 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
             <Chat roomId={params.roomId} playerName={username || ''} />
           </div>
         </div>
+      </div>
+
+      <div className="fixed bottom-4 left-0 right-0 text-center flex items-center justify-center gap-4">
+        <a 
+          href="https://www.instagram.com/lsf4k.cs/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-block text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+        >
+          @lsf4k.cs
+        </a>
+        <ThemeToggle />
       </div>
     </div>
   );
