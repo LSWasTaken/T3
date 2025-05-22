@@ -9,10 +9,16 @@ const SECURITY_CONFIG = {
   connectionRetryDelay: 5000, // 5 seconds between retries
 };
 
+// Ensure we have a valid base URL
+const baseUrl = process.env.NEXT_PUBLIC_ABLY_API_ROOT || '';
+if (!baseUrl) {
+  throw new Error('NEXT_PUBLIC_ABLY_API_ROOT environment variable is not set');
+}
+
 // Create Ably client with enhanced security
 const ablyClient = new Ably.Realtime({
   clientId: 't3-game', // Consistent clientId
-  authUrl: `${process.env.NEXT_PUBLIC_ABLY_API_ROOT}/api/ably-token?clientId=t3-game`, // Pass clientId in URL
+  authUrl: new URL('/api/ably-token', baseUrl).toString(), // Properly construct the URL
   recover: (lastConnectionDetails, cb) => {
     // Only recover if the connection was lost less than 2 minutes ago
     const twoMinutesAgo = Date.now() - 120000;
