@@ -13,7 +13,6 @@ const SECURITY_CONFIG = {
 const ablyClient = new Ably.Realtime({
   clientId: 't3-game', // Consistent clientId
   authUrl: `${process.env.NEXT_PUBLIC_ABLY_API_ROOT}/api/ably-token?clientId=t3-game`, // Pass clientId in URL
-  closeOnUnload: true,
   recover: (lastConnectionDetails, cb) => {
     // Only recover if the connection was lost less than 2 minutes ago
     const twoMinutesAgo = Date.now() - 120000;

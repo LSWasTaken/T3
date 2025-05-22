@@ -1,15 +1,16 @@
 'use client';
 
-import { AblyProvider as AblyProviderComponent } from 'ably/react';
+import { AblyProvider as BaseAblyProvider } from 'ably/react';
+import { ablyClient } from '@/lib/ably';
 import { ChatClientProvider } from '@ably/chat/react';
-import { ablyClient, chatClient } from '@/lib/ably';
+import { chatClient } from '@/lib/ably';
 
 export function AblyProvider({ children }: { children: React.ReactNode }) {
   return (
-    <AblyProviderComponent client={ablyClient}>
+    <BaseAblyProvider client={ablyClient}>
       <ChatClientProvider client={chatClient}>
         {children}
       </ChatClientProvider>
-    </AblyProviderComponent>
+    </BaseAblyProvider>
   );
 } 
