@@ -12,7 +12,7 @@ const SECURITY_CONFIG = {
 // Create Ably client with enhanced security
 const ablyClient = new Ably.Realtime({
   clientId: 't3-game',
-  key: "wcsjEw.qApNNg:iio42JbCC-iZt8ftYTWAhosSMNSpp3So10O97kwMZ0w",
+  authUrl: `${process.env.NEXT_PUBLIC_ABLY_API_ROOT}/api/ably-token`, // Use API root from env
   closeOnUnload: true,
   recover: (lastConnectionDetails, cb) => {
     // Only recover if the connection was lost less than 2 minutes ago
@@ -81,44 +81,4 @@ ablyClient.connection.on('suspended', () => {
   }
 });
 
-// Enhanced message validation
-const validateMessage = (message: any) => {
-  // Type checking
-  if (!message || typeof message !== 'object') return false;
-  if (!message.text || typeof message.text !== 'string') return false;
-  
-  // Content validation
-  if (message.text.length > SECURITY_CONFIG.maxMessageLength) return false;
-  if (message.text.trim().length === 0) return false;
-  
-  // Sanitize message
-  const sanitizedText = message.text
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .trim();
-    
-  if (sanitizedText.length === 0) return false;
-  
-  return true;
-};
-
-// Create a secure wrapper for the chat client
-const secureChatClient = {
-  ...chatClient,
-  sendMessage: async (message: any) => {
-    if (!validateMessage(message)) {
-      throw new Error('Invalid message format or content');
-    }
-    
-    // Add timestamp and sanitize message
-    const secureMessage = {
-      ...message,
-      text: message.text.replace(/[<>]/g, '').trim(),
-      timestamp: Date.now(),
-    };
-    
-    return chatClient.sendMessage(secureMessage);
-  }
-};
-
-// Export the chat client directly since we're using the useMessages hook in the Chat component
 export { ablyClient, chatClient }; 
