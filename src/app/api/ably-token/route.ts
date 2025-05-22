@@ -9,18 +9,15 @@ const ably = new Ably.Rest({
   key: process.env.ABLY_API_KEY
 });
 
-function createTokenRequestAsync(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    (ably.auth.createTokenRequest as any)({}, (err: Error | null, tokenRequest: any) => {
-      if (err) reject(err);
-      else resolve(tokenRequest);
-    });
-  });
-}
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tokenRequest = await createTokenRequestAsync();
+    // Get clientId from query params
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get('clientId') || 't3-game';
+
+    const tokenRequest = await ably.auth.createTokenRequest({
+      clientId: clientId
+    });
     return NextResponse.json(tokenRequest);
   } catch (err) {
     console.error('Error creating token request:', err);

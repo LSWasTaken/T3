@@ -11,8 +11,8 @@ const SECURITY_CONFIG = {
 
 // Create Ably client with enhanced security
 const ablyClient = new Ably.Realtime({
-  clientId: 't3-game',
-  authUrl: `${process.env.NEXT_PUBLIC_ABLY_API_ROOT}/api/ably-token`, // Use API root from env
+  clientId: 't3-game', // Consistent clientId
+  authUrl: `${process.env.NEXT_PUBLIC_ABLY_API_ROOT}/api/ably-token?clientId=t3-game`, // Pass clientId in URL
   closeOnUnload: true,
   recover: (lastConnectionDetails, cb) => {
     // Only recover if the connection was lost less than 2 minutes ago
