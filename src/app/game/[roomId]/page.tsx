@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import GameBoard from '@/components/GameBoard';
 import PlayerInfo from '@/components/PlayerInfo';
 import ThemeToggle from '@/components/ThemeToggle';
+import { Chat } from '@/components/Chat';
 
 interface GameData {
   board: string[];
@@ -112,51 +113,59 @@ export default function GamePage({ params }: { params: { roomId: string } }) {
 
   if (!playerId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-xl text-gray-900 dark:text-white">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <p className="text-xl text-gray-900 dark:text-white">
           Waiting to join game...
-        </div>
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <ThemeToggle />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-8 gap-4">
-            <PlayerInfo
-              name={gameData.players.player1 || 'Player 1'}
-              symbol="X"
-              isCurrentTurn={gameData.currentTurn === 'player1'}
-            />
-            <PlayerInfo
-              name={gameData.players.player2 || 'Player 2'}
-              symbol="O"
-              isCurrentTurn={gameData.currentTurn === 'player2'}
-            />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+          <div>
+            <div className="mb-8">
+              <div className="grid grid-cols-2 gap-4">
+                <PlayerInfo
+                  name={gameData.players.player1 || 'Player 1'}
+                  symbol="X"
+                  isCurrentTurn={gameData.currentTurn === 'player1'}
+                />
+                <PlayerInfo
+                  name={gameData.players.player2 || 'Player 2'}
+                  symbol="O"
+                  isCurrentTurn={gameData.currentTurn === 'player2'}
+                />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+              <GameBoard
+                roomId={params.roomId}
+                playerId={playerId}
+                playerName={username || ''}
+              />
+
+              {(gameData.gameStatus === 'won' || gameData.gameStatus === 'tie') && (
+                <div className="mt-8 text-center">
+                  <p className="text-2xl font-bold mb-4">
+                    {gameData.gameStatus === 'won'
+                      ? `Winner: ${gameData.winner === playerId ? 'You' : 'Opponent'}!`
+                      : "It's a tie!"}
+                  </p>
+                  <p className="text-lg text-gray-600 dark:text-gray-400">
+                    Redirecting to home page in {countdown} seconds...
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-            <GameBoard
-              roomId={params.roomId}
-              playerId={playerId}
-              playerName={username || ''}
-            />
-
-            {(gameData.gameStatus === 'won' || gameData.gameStatus === 'tie') && (
-              <div className="mt-8 text-center">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  {gameData.gameStatus === 'won'
-                    ? `Winner: ${gameData.winner === playerId ? 'You' : 'Opponent'}!`
-                    : "It's a tie!"}
-                </div>
-                <div className="text-lg text-gray-600 dark:text-gray-400">
-                  Redirecting to home page in {countdown} seconds...
-                </div>
-              </div>
-            )}
+          <div>
+            <Chat roomId={params.roomId} playerName={username || ''} />
           </div>
         </div>
       </div>
